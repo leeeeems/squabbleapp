@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squabble App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e2f;
+            color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #container {
+            max-width: 600px;
+            width: 100%;
+            background: #2b2b3d;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .fighter-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .fighter-row input {
+            flex: 1;
+            padding: 10px;
+            background: #333346;
+            border: 1px solid #444457;
+            color: #f4f4f4;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .fighter-row input::placeholder {
+            color: #8e8ea4;
+        }
+        button {
+            padding: 12px;
+            background: #3a3a5e;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #4a4a6e;
+        }
+        #fight-log {
+            margin-top: 20px;
+            background: #333346;
+            padding: 15px;
+            border-radius: 8px;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #444457;
+            font-size: 14px;
+        }
+        #fighter-details {
+            margin-top: 15px;
+            background: #333346;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #444457;
+            font-size: 14px;
+            color: #ffffff;
+            text-align: center;
+        }
+        .winner {
+            font-weight: bold;
+            color: #4caf50;
+        }
+        .loser {
+            font-weight: bold;
+            color: #ff5722;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Squabble App</h1>
+        <form id="fighterForm">
+            <div class="fighter-row">
+                <input type="text" id="fighter1Name" class="name" placeholder="Fighter 1 Name">
+            </div>
+            <div class="fighter-row">
+                <input type="text" id="fighter2Name" class="name" placeholder="Fighter 2 Name">
+            </div>
+        </form>
+        <button id="startFight">Start Fight</button>
+        <div id="fighter-details"></div>
+        <div id="fight-log"></div>
+    </div>
+
+    <script>
+        const firstNames = ["Joe", "Todd", "Mike", "Sarah", "Jill", "Tim", "Linda", "Karen"];
+        const lastNames = ["Smith", "Johnson", "Brown", "Taylor", "Anderson", "Davis", "Harris"];
+        const bodyParts = ["head", "arm", "leg", "stomach", "back"];
+        const moves = ["punches", "kicks", "chops", "slaps", "elbows"];
+        const damageValues = { "punches": 10, "kicks": 15, "chops": 20, "slaps": 5, "elbows": 25 };
+
+        const dodgeImmuneNames = ["Liam", "Leems", "Leeman", "LL", "Liam Ladia", "Leemer", "Leems"];
+
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function createFighter(name) {
+            return {
+                name: name || `${getRandomElement(firstNames)} ${getRandomElement(lastNames)}`,
+                hp: 100,
+                isKnockedOut: false
+            };
+        }
+
+        function logMessage(message) {
+            const log = document.getElementById("fight-log");
+            log.innerHTML += `<p>${message}</p>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateFighterDetails(fighter1, fighter2) {
+            const details = document.getElementById("fighter-details");
+            details.innerHTML = `<strong>${fighter1.name}</strong> (HP: ${fighter1.hp}) VS <strong>${fighter2.name}</strong> (HP: ${fighter2.hp})`;
+        }
+
+        function isImmuneToDamage(fighter) {
+            return dodgeImmuneNames.includes(fighter.name);
+        }
+
+        document.getElementById("startFight").addEventListener("click", () => {
+            const fighter1Name = document.getElementById("fighter1Name").value.trim();
+            const fighter2Name = document.getElementById("fighter2Name").value.trim();
+
+            const fighter1 = createFighter(fighter1Name);
+            const fighter2 = createFighter(fighter2Name);
+
+            updateFighterDetails(fighter1, fighter2);
+
+            const log = document.getElementById("fight-log");
+            log.innerHTML = "";
+
+            let interval = setInterval(() => {
+                if (fighter1.isKnockedOut || fighter2.isKnockedOut) {
+                    clearInterval(interval);
+                    const winner = fighter1.isKnockedOut ? fighter2 : fighter1;
+                    const loser = fighter1.isKnockedOut ? fighter1 : fighter2;
+
+                    logMessage(`<span class="winner">${winner.name} WINS!</span>`);
+                    logMessage(`<span class="loser">${loser.name} is knocked out cold!</span>`);
+                    return;
+                }
+
+                const attacker = Math.random() > 0.5 ? fighter1 : fighter2;
+                const defender = attacker === fighter1 ? fighter2 : fighter1;
+
+                if (isImmuneToDamage(defender)) {
+                    logMessage(`${attacker.name} attempts to attack, but ${defender.name} dodges effortlessly!`);
+                } else if (Math.random() > 0.7) {
+                    logMessage(`${attacker.name} attempts to attack, but ${defender.name} dodges the attack!`);
+                } else {
+                    const move = getRandomElement(moves);
+                    const damage = damageValues[move];
+                    defender.hp -= damage;
+
+                    logMessage(`${attacker.name} ${move} ${defender.name} in the ${getRandomElement(bodyParts)} (-${damage} HP)`);
+
+                    if (defender.hp < 0) defender.hp = 0; // Prevent negative HP
+
+                    updateFighterDetails(fighter1, fighter2);
+
+                    if (defender.hp <= 0) {
+                        if (Math.random() > 0.5) {
+                            logMessage(`${defender.name} is knocked down...`);
+                            setTimeout(() => logMessage("waiting..."), 1000);
+                            setTimeout(() => logMessage("waiting..."), 2000);
+                            setTimeout(() => {
+                                if (Math.random() > 0.5) {
+                                    defender.hp = 10;
+                                    logMessage(`${defender.name} gets back up with 10 HP and is ready to fight!`);
+                                    updateFighterDetails(fighter1, fighter2);
+                                } else {
+                                    defender.isKnockedOut = true;
+                                    logMessage(`${defender.name} is knocked out cold!`);
+                                }
+                            }, 3000);
+                        } else {
+                            defender.isKnockedOut = true;
+                            logMessage(`${defender.name} is knocked out cold!`);
+                        }
+                    }
+                }
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
